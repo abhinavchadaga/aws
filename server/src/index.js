@@ -44,11 +44,18 @@ const storage = multer.diskStorage({
   },
 });
 
+/**
+ * Multer file filter to only allow zip and csv files
+ *
+ * @param req Request
+ * @param file Uploaded file
+ * @param cb callback to call when file is accepted or rejected
+ */
 function fileFilter(req, file, cb) {
   // only zips and csv files are allowed
-  const allowedExts = new Set([".zip", ".csv"]);
+  const allowedExtensions = new Set([".zip", ".csv"]);
   const ext = path.extname(file.originalname);
-  if (allowedExts.has(ext)) {
+  if (allowedExtensions.has(ext)) {
     cb(null, true);
   } else {
     cb(null, false);
