@@ -4,9 +4,12 @@ const path = require("path");
 const fs = require("fs");
 const unzipper = require("unzipper");
 const { spawn } = require("child_process");
+const cors = require("cors");
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
+app.use(cors());
+
 const port = 3000;
 
 const UPLOAD_DIR = path.join(__dirname, "../uploads");
