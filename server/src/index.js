@@ -63,7 +63,7 @@ function fileFilter(req, file, cb) {
 }
 
 // multer object to handle uploads
-const upload = multer({ storage: storage, fileFilter: fileFilter });
+const upload = multer({ storage, fileFilter });
 
 /**
  * Allows only one user to be using server at a time
