@@ -74,7 +74,7 @@ const upload = multer({ storage, fileFilter });
 function checkAvailability(req, res, next) {
   const uploads = fs.readdirSync(UPLOAD_DIR);
   if (uploads.length > 0) {
-    res.status(400).send("dataset already uploaded");
+    res.status(400).json({ message: "server is busy! please try again later" });
     return;
   }
   next();
@@ -89,7 +89,7 @@ app.post(
   upload.single("dataset"),
   (req, res) => {
     if (!req.file) {
-      return res.status(400).send("file upload failed");
+      return res.status(400).json({ message: "file upload failed" });
     }
 
     // unzip to same location and delete zip
@@ -100,11 +100,13 @@ app.post(
         .pipe(unzipper.Extract({ path: UPLOAD_DIR }))
         .on("close", () => {
           fs.unlinkSync(path_to_zip);
-          res.send(`successfully uploaded ${req.file.originalname}`);
+          res.json({
+            message: `successfully uploaded ${req.file.originalname}`,
+          });
         });
     } else {
-      // uploaded file was a zip file
-      res.send(`successfully uploaded ${req.file.originalname}`);
+      // uploaded file was a csv file
+      res.json({ message: `successfully uploaded ${req.file.originalname}` });
     }
   }
 );
@@ -112,7 +114,7 @@ app.post(
 app.delete("/dataset/delete", (req, res) => {
   const files = fs.readdirSync(UPLOAD_DIR);
   if (files.length === 0) {
-    return res.send("nothing to delete");
+    return res.json({ message: "nothing to delete" });
   }
 
   const path_to_dataset = path.join(UPLOAD_DIR, files[0]);
@@ -121,7 +123,7 @@ app.delete("/dataset/delete", (req, res) => {
   } else {
     fs.unlinkSync(path_to_dataset);
   }
-  res.send(`deleted ${files[0]}`);
+  res.json({ message: `successfully deleted ${files[0]}` });
 });
 
 /**
@@ -131,9 +133,9 @@ app.post("/select-arch", (req, res) => {
   const validArchitectures = new Set(["alexnet", "vgg", "resnet"]);
   if (req.body.arch && validArchitectures.has(req.body.arch)) {
     ARCH = req.body.arch;
-    return res.send(`selected ${ARCH} architecture`);
+    return res.json({ message: `selected ${ARCH} architecture` });
   }
-  return res.status(400).send("invalid selection");
+  return res.status(400).json({ message: "invalid selection" });
 });
 
 const progress = { progress: 0 };
@@ -141,11 +143,11 @@ let pythonProcess = null;
 
 app.post("/train/start", (req, res) => {
   if (ARCH === null) {
-    return res.status(400).send("no architecture selected");
+    return res.status(400).json({ message: "no architecture selected" });
   }
 
   if (pythonProcess !== null) {
-    return res.status(400).send("training already in progress");
+    return res.status(400).json({ message: "training already in progress" });
   }
 
   const pythonEnv = "/Users/abhinavchadaga/miniforge3/envs/py39/bin/python3";
@@ -172,12 +174,12 @@ app.post("/train/start", (req, res) => {
     console.log(err);
   });
 
-  res.status(203).send("training started");
+  res.status(203).json({ message: "training started" });
 });
 
 app.get("/train/progress", (req, res) => {
   if (pythonProcess === null) {
-    return res.status(400).send("no training in progress");
+    return res.status(400).json({ message: "no training in progress" });
   }
   // create SSE stream
   res.writeHead(200, {
