@@ -11,16 +11,29 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 const port = 3000;
-
 const UPLOAD_DIR = path.join(__dirname, "../uploads");
-let ARCH = null;
+
+/**
+ * Ensures that the upload folder exists before any upload requests are handled
+ *
+ * @param req Request object
+ * @param res Response object
+ * @param next next middleware function to run
+ */
+function createUploadFolder(req, res, next) {
+  if (!fs.existsSync(UPLOAD_DIR)) {
+    console.log(`creating ${UPLOAD_DIR}...`);
+    fs.mkdirSync(UPLOAD_DIR);
+  }
+  next();
+}
+
+app.use(createUploadFolder);
+
+// Multer storage object to place uploaded files
+// in the uploads folder and rename them with a timestamp
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // create save directory if it doesn't exit
-    if (!fs.existsSync(UPLOAD_DIR)) {
-      console.log(`creating ${UPLOAD_DIR}...`);
-      fs.mkdirSync(UPLOAD_DIR);
-    }
     cb(null, UPLOAD_DIR);
   },
   filename: function (req, file, cb) {
