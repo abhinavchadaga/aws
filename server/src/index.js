@@ -126,6 +126,7 @@ app.delete("/dataset/delete", (req, res) => {
   res.json({ message: `successfully deleted ${files[0]}` });
 });
 
+let ARCH = null;
 /**
  * POST route to select the architecture of the model to train
  */
